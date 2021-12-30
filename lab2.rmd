@@ -1,0 +1,185 @@
+---
+title: "Wine quality"
+author: "Ryan Goding, George Jiao and Yujie Liu"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+# The Setup
+
+```{r load packages, message=FALSE}
+library(tidyverse)
+library(magrittr)
+library(ggplot2)
+library(patchwork)
+library(sandwich)
+library(lmtest)
+library(fec16)
+library(MASS)
+theme_set(theme_minimal())
+knitr::opts_chunk$set(dpi = 300)
+```
+
+# Data Cleaning
+
+```{r, message=FALSE}
+df <- read.table("./winequality.csv", header = TRUE, sep = ",")
+```
+
+# Data Exploration
+
+Scatter plot of each variable against quality
+
+```{r, message=FALSE}
+fixed_acid <- df %>% 
+  ggplot() + 
+  aes(x = fixed.acidity, y = quality) + 
+  geom_point() + 
+  labs(
+    title    = 'Fixed Acidity', 
+    x        = 'Fixed Acidity', 
+    y        = 'Quality'
+  )
+
+volatile_acid <- df %>% 
+  ggplot() + 
+  aes(x = volatile.acidity, y = quality) + 
+  geom_point() + 
+  labs(
+    title    = 'Volatile Acidity', 
+    x        = 'Volatile Acidity', 
+    y        = 'Quality'
+  )
+
+citric_acid <- df %>% 
+  ggplot() + 
+  aes(x = citric.acid, y = quality) + 
+  geom_point() + 
+  labs(
+    title    = 'Citric Acid', 
+    x        = 'Citric Acid', 
+    y        = 'Quality'
+  )
+
+residual_sugar <- df %>% 
+  ggplot() + 
+  aes(x = residual.sugar, y = quality) + 
+  geom_point() + 
+  labs(
+    title    = 'Residual Sugar', 
+    x        = 'Residual Sugar', 
+    y        = 'Quality'
+  )
+
+chlorides <- df %>% 
+  ggplot() + 
+  aes(x = chlorides, y = quality) + 
+  geom_point() + 
+  labs(
+    title    = 'Chlorides', 
+    x        = 'Chlorides', 
+    y        = 'Quality'
+  )
+
+free_sulfur_dioxide <- df %>% 
+  ggplot() + 
+  aes(x = free.sulfur.dioxide, y = quality) + 
+  geom_point() + 
+  labs(
+    title    = 'Free Sulfur Dioxide', 
+    x        = 'Free Sulfur Dioxide', 
+    y        = 'Quality'
+  )
+
+total_sulfur_dioxide <- df %>% 
+  ggplot() + 
+  aes(x = total.sulfur.dioxide, y = quality) + 
+  geom_point() + 
+  labs(
+    title    = 'Total Sulfur Dioxide', 
+    x        = 'Total Sulfur Dioxide', 
+    y        = 'Quality'
+  )
+
+density_ <- df %>% 
+  ggplot() + 
+  aes(x = density, y = quality) + 
+  geom_point() + 
+  labs(
+    title    = 'Density', 
+    x        = 'Density', 
+    y        = 'Quality'
+  )
+
+pH <- df %>% 
+  ggplot() + 
+  aes(x = pH, y = quality) + 
+  geom_point() + 
+  labs(
+    title    = 'pH', 
+    x        = 'pH', 
+    y        = 'Quality'
+  )
+
+sulphates <- df %>% 
+  ggplot() + 
+  aes(x = sulphates, y = quality) + 
+  geom_point() + 
+  labs(
+    title    = 'Sulphates', 
+    x        = 'Sulphates', 
+    y        = 'Quality'
+  )
+
+alcohol <- df %>% 
+  ggplot() + 
+  aes(x = alcohol, y = quality) + 
+  geom_point() + 
+  labs(
+    title    = 'Alcohol', 
+    x        = 'Alcohol', 
+    y        = 'Quality'
+  )
+
+fixed_acid
+volatile_acid
+citric_acid
+residual_sugar
+chlorides
+free_sulfur_dioxide
+total_sulfur_dioxide
+density_
+pH
+sulphates
+alcohol
+
+```
+
+There seems to have some slight negative correlation between quality and volatile acidity, quality and density. Slight positive correlation between quality and alcohol.
+
+The difficulty of using linear regression is quality only takes value between 3 and 8.
+
+Exploring the distribution of quality below:
+
+```{r distriution of outcome data}
+quality_histogram <- df %>% 
+  ggplot() + 
+  aes(x = quality) + 
+  geom_histogram(bins = 30) + 
+  labs(
+    title    = 'Quality', 
+    x        = 'Quality', 
+    y        = 'Frequency'
+  )
+
+quality_histogram
+```
+
+We have to transform the quality variable in some way. Try logit transformation.
+
+```{r transformation}
+model <- polr(as.factor(quality) ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = df, Hess = TRUE)
+```
+
